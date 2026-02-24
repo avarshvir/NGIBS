@@ -1,0 +1,12 @@
+requests 
+pywebview 
+langchain 
+langchain-community
+duckduckgo-search 
+beautifulsoup4
+wikipedia
+chromadb 
+sentence-transformers 
+pypdf
+yfinance 
+arxiv
