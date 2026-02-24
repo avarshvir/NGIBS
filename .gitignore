@@ -1,0 +1,9 @@
+__pycache__
+*.pyc
+build/
+dist/
+NGIBS_Architect.spec
+data
+downloads
+logs
+download
