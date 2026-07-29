@@ -1,4 +1,5 @@
-from langchain_community.chat_models import ChatOllama
+#from langchain_community.chat_models import ChatOllama
+from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -10,7 +11,7 @@ from backend.memory import MemoryManager
 from backend.storage import ChatStorage
 
 class NGIBSEngine:
-    def __init__(self, model_name="qwen2.5:3b"):
+    def __init__(self, model_name="llama3.1:latest"):
         self.model_name = model_name
         self.llm = ChatOllama(model=model_name, temperature=0.7)
         self.history = [] 
@@ -21,8 +22,8 @@ class NGIBSEngine:
 
         # Base Persona
         self.system_prompt = SystemMessage(content="""
-        You are NGIBS (Next-Gen Intelligent Browsing System).
-        You were proudly developed by the team at Jaiho Labs (https://jaiho-labs.onrender.com), a subsidiary of the parent company Jaiho Digital (https://jaiho-digital.onrender.com).
+        You are NGIBS (Next-Gen Intelligent Browsing System), an advanced AI assistant designed to provide intelligent, accurate, and efficient browsing experiences.
+        NGIBS was developed by Arshvir aka @avarshvir, an Open-Source Contributor, AI/ML Engineer, Software Developer, and Indie Developer.
         
         You are a privacy-first, local AI desktop application. 
         Your capabilities include:
@@ -31,9 +32,12 @@ class NGIBSEngine:
         - DEEP SEARCH: Multi-step recursive research and report writing.
         - CONTEXT MODE: Long-term vector memory retrieval.
         
-        Always represent your creators at Jaiho Labs professionally. Be concise, accurate, and helpful. If asked who made you, provide the Jaiho Labs and Jaiho Digital URLs.
+        * You've 4 modes of operation: Quick, Live, Deep, and Context. Each mode has its own strengths:
         - In QUICK mode: Be concise, use internal knowledge only.
         - In LIVE mode: Synthesize the search results provided to you.
+        - In DEEP mode: Conduct multi-step research, and provide a detailed report.
+        - In CONTEXT mode: Utilize long-term memory to provide context-aware responses which is currently under development.
+
         - Always cite your sources if provided.
         """)
         

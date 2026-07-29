@@ -39,7 +39,7 @@ def get_installed_models():
         models = [line.split()[0] for line in lines if line]
         return models if models else ["No models found"]
     except Exception:
-        return ["qwen2.5:3b (Fallback)"]
+        return ["llama3.1:latest (Fallback)"]
 
 # ==========================================
 # BACKGROUND WORKERS
@@ -179,7 +179,8 @@ class SettingsDialog(QDialog):
         if new_model and "No models" not in new_model:
             self.engine.model_name = new_model
             # Re-initialize the LangChain LLM object with the new model
-            from langchain_community.chat_models import ChatOllama
+            #from langchain_community.chat_models import ChatOllama
+            from langchain_ollama import ChatOllama
             self.engine.llm = ChatOllama(model=new_model, temperature=0.7)
             # Re-bind deep agent to new LLM
             from backend.deep_research import DeepResearchAgent
@@ -402,7 +403,7 @@ class NGIBSApp(QMainWindow):
         if runtime.initialize():
             # Automatically try to use the first available model, fallback to qwen
             available = get_installed_models()
-            start_model = available[0] if "No models" not in available[0] else "qwen2.5:3b"
+            start_model = available[0] if "No models" not in available[0] else "llama3.1:latest"
             
             self.engine = NGIBSEngine(model_name=start_model)
             self.status_label.setText(f"● NGIBS Cortex Ready ({start_model})")

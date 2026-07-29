@@ -1,7 +1,7 @@
 import time
 import requests
 from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 import os
 import json
 
