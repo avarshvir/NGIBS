@@ -2,9 +2,6 @@ import os
 import sys
 import subprocess
 
-# ==========================================
-# PRE-LOAD PYTORCH DLLS (Fixes Windows Crash)
-# ==========================================
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 try:
     import torch
@@ -19,15 +16,10 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont
 
-# Import our backend
 from backend.runtime import NGIBSRuntime
 from backend.engine import NGIBSEngine
 
-# ==========================================
-# HELPER: GET INSTALLED MODELS
-# ==========================================
 def get_installed_models():
-    """Runs 'ollama list' to get dynamically available models."""
     try:
         startupinfo = None
         if os.name == 'nt':
@@ -41,9 +33,6 @@ def get_installed_models():
     except Exception:
         return ["llama3.1:latest (Fallback)"]
 
-# ==========================================
-# BACKGROUND WORKERS
-# ==========================================
 class AIWorker(QThread):
     finished = pyqtSignal(str)
     
@@ -84,9 +73,6 @@ class ModelPullWorker(QThread):
         except Exception as e:
             self.finished.emit(False, str(e))
 
-# ==========================================
-# SETTINGS DIALOG (Modernized)
-# ==========================================
 class SettingsDialog(QDialog):
     def __init__(self, engine, main_window):
         super().__init__(main_window)
@@ -95,7 +81,6 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("NGIBS Preferences")
         self.setFixedSize(500, 500)
         
-        # Modern Settings Styling
         self.setStyleSheet("""
             QDialog { background-color: #ffffff; }
             QLabel { color: #111827; font-size: 13px; }
@@ -113,7 +98,6 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
         
-        # --- 1. ACTIVE MODEL SWITCHER ---
         lbl1 = QLabel("ACTIVE AI ENGINE")
         lbl1.setProperty("class", "sectionTitle")
         layout.addWidget(lbl1)
@@ -121,7 +105,6 @@ class SettingsDialog(QDialog):
         switch_layout = QHBoxLayout()
         self.model_combo = QComboBox()
         self.model_combo.addItems(get_installed_models())
-        # Set current
         idx = self.model_combo.findText(self.engine.model_name)
         if idx >= 0: self.model_combo.setCurrentIndex(idx)
         
@@ -133,7 +116,6 @@ class SettingsDialog(QDialog):
         switch_layout.addWidget(self.switch_btn)
         layout.addLayout(switch_layout)
 
-        # --- 2. DOWNLOAD NEW MODEL ---
         lbl2 = QLabel("DOWNLOAD NEW MODEL")
         lbl2.setProperty("class", "sectionTitle")
         layout.addWidget(lbl2)
@@ -153,7 +135,6 @@ class SettingsDialog(QDialog):
         self.model_status.setStyleSheet("color: #6b7280; font-size: 11px;")
         layout.addWidget(self.model_status)
 
-        # --- 3. MEMORY & DATA ---
         lbl3 = QLabel("DATA & PRIVACY")
         lbl3.setProperty("class", "sectionTitle")
         layout.addWidget(lbl3)
@@ -178,11 +159,8 @@ class SettingsDialog(QDialog):
         new_model = self.model_combo.currentText()
         if new_model and "No models" not in new_model:
             self.engine.model_name = new_model
-            # Re-initialize the LangChain LLM object with the new model
-            #from langchain_community.chat_models import ChatOllama
             from langchain_ollama import ChatOllama
             self.engine.llm = ChatOllama(model=new_model, temperature=0.7)
-            # Re-bind deep agent to new LLM
             from backend.deep_research import DeepResearchAgent
             self.engine.deep_agent = DeepResearchAgent(self.engine.llm)
             
@@ -203,7 +181,7 @@ class SettingsDialog(QDialog):
         self.model_status.setText(message)
         if success:
             self.model_combo.clear()
-            self.model_combo.addItems(get_installed_models()) # Refresh dropdown
+            self.model_combo.addItems(get_installed_models()) 
 
     def wipe_memory(self):
         reply = QMessageBox.question(self, 'Confirm Wipe', 'Wipe all long-term Vector Memory?',
@@ -220,9 +198,6 @@ class SettingsDialog(QDialog):
             self.main_window.start_new_chat()
             self.accept()
 
-# ==========================================
-# MAIN GUI WINDOW (The "Big Tech" UI)
-# ==========================================
 class NGIBSApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -241,7 +216,6 @@ class NGIBSApp(QMainWindow):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # --- SIDEBAR ---
         sidebar = QFrame()
         sidebar.setFixedWidth(280)
         sidebar.setObjectName("sidebar")
@@ -257,7 +231,6 @@ class NGIBSApp(QMainWindow):
         self.btn_new_chat.clicked.connect(self.start_new_chat)
         sidebar_layout.addWidget(self.btn_new_chat)
 
-        # Modes Section
         sidebar_layout.addWidget(QLabel("INTELLIGENCE MODES", objectName="sectionLabel"))
         self.mode_btns = {}
         modes = [
@@ -277,18 +250,15 @@ class NGIBSApp(QMainWindow):
             
         self.mode_btns["quick"].setChecked(True)
         
-        # History Section
         sidebar_layout.addWidget(QLabel("CHAT HISTORY", objectName="sectionLabel"))
         self.history_list = QListWidget()
         self.history_list.setObjectName("historyList")
         self.history_list.itemClicked.connect(self.load_selected_chat)
         
-        # Right-Click Context Menu
         self.history_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.history_list.customContextMenuRequested.connect(self.show_history_context_menu)
         sidebar_layout.addWidget(self.history_list)
 
-        # Settings
         self.settings_btn = QPushButton("⚙️ Preferences & Models")
         self.settings_btn.setObjectName("settingsBtn")
         self.settings_btn.clicked.connect(self.open_settings)
@@ -296,11 +266,9 @@ class NGIBSApp(QMainWindow):
         
         main_layout.addWidget(sidebar)
 
-        # --- MAIN CHAT AREA ---
         chat_area = QWidget()
         chat_area.setObjectName("chatArea")
         chat_layout = QVBoxLayout(chat_area)
-        # Squeeze the chat into the center for a clean reading experience
         chat_layout.setContentsMargins(100, 40, 100, 40)
 
         self.status_label = QLabel("● Initializing Cortex...")
@@ -312,7 +280,6 @@ class NGIBSApp(QMainWindow):
         self.chat_display.setOpenExternalLinks(True)
         chat_layout.addWidget(self.chat_display)
 
-        # Input Area (Pill Shaped)
         input_container = QFrame()
         input_container.setObjectName("inputContainer")
         input_layout = QHBoxLayout(input_container)
@@ -328,7 +295,7 @@ class NGIBSApp(QMainWindow):
         self.input_field.setPlaceholderText("Ask NGIBS anything...")
         self.input_field.returnPressed.connect(self.send_message)
         
-        self.send_btn = QPushButton("↑") # Modern up-arrow icon
+        self.send_btn = QPushButton("↑") 
         self.send_btn.setObjectName("sendBtn")
         self.send_btn.clicked.connect(self.send_message)
         
@@ -340,7 +307,6 @@ class NGIBSApp(QMainWindow):
         main_layout.addWidget(chat_area)
 
     def apply_stylesheet(self):
-        """The 'Big Tech' CSS equivalent for PyQt6"""
         self.setStyleSheet("""
             * { font-family: 'Segoe UI', -apple-system, Roboto, sans-serif; }
             QMainWindow { background-color: #ffffff; }
@@ -401,7 +367,6 @@ class NGIBSApp(QMainWindow):
         self.append_system_msg("Booting intelligence...")
         runtime = NGIBSRuntime()
         if runtime.initialize():
-            # Automatically try to use the first available model, fallback to qwen
             available = get_installed_models()
             start_model = available[0] if "No models" not in available[0] else "llama3.1:latest"
             
@@ -472,7 +437,6 @@ class NGIBSApp(QMainWindow):
         if not self.engine: return
         dialog = SettingsDialog(self.engine, self)
         dialog.exec()
-        # Update header just in case model changed
         self.status_label.setText(f"● NGIBS Cortex Ready ({self.engine.model_name})")
 
     def upload_file(self):
