@@ -83,27 +83,47 @@ class NGIBSEngine:
                 print(f">> [Memory] Recalled: {past_info[:50]}...")
 
                 context_prompt = f"""
-                You are NGIBS. Use the following memory of our past conversations to answer.
+                You are NGIBS, a highly personalized AI assistant. 
+                Use the following retrieved memories from our past conversations to personalize your response, adapt to the user's preferences, and answer the current question accurately.
+                
+                Retrieved Memories:
                 {past_info}
                 
                 User: {user_input}
                 """
 
-                self.history.append(HumanMessage(content=context_prompt))
-                response_msg = self.llm.invoke(self.history)
+                temp_history = self.history + [HumanMessage(content=context_prompt)]
+                if len(temp_history) > 11:
+                    temp_history = [temp_history[0]] + temp_history[-10:]
+                
+                response_msg = self.llm.invoke(temp_history)
                 response = response_msg.content
+                
+                self.history.append(HumanMessage(content=user_input))
+                self.history.append(AIMessage(content=response))
 
             elif self.current_mode == "deep" or user_input.startswith("/deep"):
                 response = self._handle_deep_mode(user_input)
+                self.history.append(HumanMessage(content=user_input))
+                self.history.append(AIMessage(content=response))
 
             elif self.current_mode == "live":
                 response = self._handle_live_mode(user_input)
+                self.history.append(HumanMessage(content=user_input))
+                self.history.append(AIMessage(content=response))
 
             else:
                 self.history.append(HumanMessage(content=user_input))
+                if len(self.history) > 11:
+                    self.history = [self.history[0]] + self.history[-10:]
+                
                 response_msg = self.llm.invoke(self.history)
                 response = response_msg.content
                 self.history.append(response_msg)
+                
+            # Keep history trimmed for all modes
+            if len(self.history) > 11:
+                self.history = [self.history[0]] + self.history[-10:]
 
             self.storage.add_message(self.current_session_id, "assistant", response)
 
@@ -152,6 +172,15 @@ class NGIBSEngine:
         else:
             tool_result = search_web(query)
             used_source = "DuckDuckGo Web Search"
+            
+            # Extract the first URL and scrape it for deeper info
+            import re
+            match = re.search(r"URL: (https?://[^\s]+)", tool_result)
+            if match:
+                first_url = match.group(1)
+                print(f">> [Live Agent] Scraping top search result for more context: {first_url}")
+                page_content = scrape_url(first_url)
+                tool_result += f"\n\n--- Deeper Context from Top Result ({first_url}) ---\n{page_content}"
 
         prompt = f"""
         You are NGIBS Live Agent. 
