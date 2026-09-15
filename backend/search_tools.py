@@ -6,7 +6,7 @@ import os
 import json
 
 # --- TOOL 1: WEB SEARCH (DuckDuckGo) ---
-def search_web(query, max_results=3):
+def search_web(query, max_results=5):
     """
     Performs a live web search using DuckDuckGo.
     Good for: News, current events, checking prices.
