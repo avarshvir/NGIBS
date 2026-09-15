@@ -43,7 +43,7 @@ class MemoryManager:
 
     def save_memory(self, user_input, ai_response):
         timestamp = datetime.now().isoformat()
-        text_blob = f"User: {user_input}\nAI: {ai_response}"
+        text_blob = f"[Interaction at {timestamp}]\nUser: {user_input}\nAssistant: {ai_response}"
         
         mem_id = f"mem_{int(datetime.now().timestamp())}"
         
@@ -53,7 +53,7 @@ class MemoryManager:
             ids=[mem_id]
         )
 
-    def recall(self, query, n_results=2):
+    def recall(self, query, n_results=5):
         try:
             results = self.collection.query(
                 query_texts=[query],
