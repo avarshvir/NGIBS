@@ -19,7 +19,18 @@ class DeepResearchAgent:
         for i, sub_q in enumerate(sub_queries):
             yield f"\n **Researching:** *{sub_q}*...\n"
             
-            result = search_web(sub_q, max_results=2)
+            result = search_web(sub_q, max_results=3)
+            
+            # Optionally scrape the top URL for more detailed research context
+            import re
+            from backend.search_tools import scrape_url
+            match = re.search(r"URL: (https?://[^\s]+)", result)
+            if match:
+                first_url = match.group(1)
+                yield f"  *Scraping top resource: {first_url}*\n"
+                page_content = scrape_url(first_url)
+                result += f"\n\n--- Detailed Content from {first_url} ---\n{page_content}"
+                
             aggregated_context += f"\n--- TOPIC: {sub_q} ---\n{result}\n"
 
         yield "\n **Writing Final Report...**\n"
