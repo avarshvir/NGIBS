@@ -97,11 +97,24 @@ NGIBS follows a local-first design philosophy:
 
 ## Installation (Windows)
 
+### One-Click Installer
+
+For the simplest setup, download `install_ngibs.bat` from the repository and double-click it. The launcher will use the checkout beside the batch file when available; otherwise it will create `%LOCALAPPDATA%\NGIBS\app` and download the repository there.
+
+It checks each component before doing work and only installs what is missing:
+
+- Python 3.10 or newer (Python 3.11.9 is downloaded when no suitable version exists)
+- Ollama and its local service
+- The default `llama3.1:latest` model
+- A project-local `.venv` and the packages in `requirements.txt`
+
+The launcher can be run repeatedly. It does not recreate the virtual environment, reinstall already-satisfied pip packages, or pull an existing model. It uses Git when available and falls back to the public GitHub ZIP archive when Git is not installed.
+
+The batch file's configuration values are at the top of `install_ngibs.bat`: `REPO_URL`, `INSTALL_ROOT`, `PYTHON_DOWNLOAD_VERSION`, `PYTHON_MIN_MAJOR`, `PYTHON_MIN_MINOR`, `OLLAMA_MODEL`, and `OLLAMA_PORT`. Change `OLLAMA_MODEL` there if the application should use a different default model; keep it consistent with `backend/engine.py`.
+
 ### Prerequisites
 
-1. Install Python 3.10 or newer
-2. Install Ollama from the official website
-3. Make sure Ollama is running on your machine
+No manual Python, Ollama, or package installation is required. The computer needs Windows, an internet connection for the first setup, and permission to install per-user applications. Git is optional because the launcher has a ZIP fallback.
 
 ### Setup
 
