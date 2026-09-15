@@ -216,15 +216,24 @@ class NGIBSApp(QMainWindow):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        sidebar = QFrame()
-        sidebar.setFixedWidth(280)
-        sidebar.setObjectName("sidebar")
-        sidebar_layout = QVBoxLayout(sidebar)
+        self.sidebar = QFrame()
+        self.sidebar.setFixedWidth(280)
+        self.sidebar.setObjectName("sidebar")
+        sidebar_layout = QVBoxLayout(self.sidebar)
         sidebar_layout.setContentsMargins(20, 30, 20, 20)
         
+        brand_layout = QHBoxLayout()
         brand_label = QLabel("N G I B S")
         brand_label.setObjectName("brandLabel")
-        sidebar_layout.addWidget(brand_label)
+        brand_layout.addWidget(brand_label)
+        
+        self.btn_collapse = QPushButton("☰")
+        self.btn_collapse.setObjectName("toggleSidebarBtn")
+        self.btn_collapse.setFixedSize(36, 36)
+        self.btn_collapse.clicked.connect(self.toggle_sidebar)
+        brand_layout.addWidget(self.btn_collapse)
+        
+        sidebar_layout.addLayout(brand_layout)
 
         self.btn_new_chat = QPushButton("+ New Chat")
         self.btn_new_chat.setObjectName("newChatBtn")
@@ -264,16 +273,27 @@ class NGIBSApp(QMainWindow):
         self.settings_btn.clicked.connect(self.open_settings)
         sidebar_layout.addWidget(self.settings_btn)
         
-        main_layout.addWidget(sidebar)
+        main_layout.addWidget(self.sidebar)
 
         chat_area = QWidget()
         chat_area.setObjectName("chatArea")
         chat_layout = QVBoxLayout(chat_area)
         chat_layout.setContentsMargins(100, 40, 100, 40)
 
+        top_bar = QHBoxLayout()
+        self.toggle_sidebar_btn = QPushButton("☰")
+        self.toggle_sidebar_btn.setObjectName("toggleSidebarBtn")
+        self.toggle_sidebar_btn.setFixedSize(36, 36)
+        self.toggle_sidebar_btn.clicked.connect(self.toggle_sidebar)
+        self.toggle_sidebar_btn.setVisible(False)
+        top_bar.addWidget(self.toggle_sidebar_btn)
+
         self.status_label = QLabel("● Initializing Cortex...")
         self.status_label.setObjectName("statusLabel")
-        chat_layout.addWidget(self.status_label)
+        top_bar.addWidget(self.status_label)
+        top_bar.addStretch()
+        
+        chat_layout.addLayout(top_bar)
 
         self.chat_display = QTextBrowser()
         self.chat_display.setObjectName("chatDisplay")
@@ -340,7 +360,9 @@ class NGIBSApp(QMainWindow):
             
             /* Chat Area Styling */
             #chatArea { background-color: #ffffff; }
-            #statusLabel { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+            #toggleSidebarBtn { background-color: transparent; border: 1px solid #e5e7eb; font-size: 18px; color: #4b5563; border-radius: 6px; margin-right: 15px;}
+            #toggleSidebarBtn:hover { background-color: #f3f4f6; color: #111827; }
+            #statusLabel { font-size: 12px; font-weight: 700; }
             #chatDisplay { border: none; background-color: #ffffff; font-size: 15px; }
             
             /* Input Box Container (The Pill) */
@@ -362,6 +384,14 @@ class NGIBSApp(QMainWindow):
             QMenu::item { padding: 8px 25px; font-size: 13px; color: #374151; border-radius: 4px; }
             QMenu::item:selected { background-color: #fee2e2; color: #dc2626; }
         """)
+
+    def toggle_sidebar(self):
+        if self.sidebar.isVisible():
+            self.sidebar.setVisible(False)
+            self.toggle_sidebar_btn.setVisible(True)
+        else:
+            self.sidebar.setVisible(True)
+            self.toggle_sidebar_btn.setVisible(False)
 
     def boot_system(self):
         self.append_system_msg("Booting intelligence...")
@@ -480,11 +510,15 @@ class NGIBSApp(QMainWindow):
 
     def append_user_msg(self, text):
         html = f"""
-        <div style="text-align: right; margin: 15px 0;">
-            <span style="background-color: #f3f4f6; color: #111827; padding: 12px 20px; border-radius: 20px 20px 4px 20px; display: inline-block; font-size: 15px; max-width: 85%;">
-                {text}
-            </span>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 15px 0;">
+            <tr>
+                <td align="right">
+                    <span style="background-color: #f3f4f6; color: #111827; padding: 12px 20px; border-radius: 20px 20px 4px 20px; font-size: 15px;">
+                        {text}
+                    </span>
+                </td>
+            </tr>
+        </table>
         """
         self.chat_display.append(html)
 
